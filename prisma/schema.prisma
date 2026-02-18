@@ -1,0 +1,135 @@
+// ContrataFácil - Sistema de Recepción de CVs
+// Schema v1.1 - Con notificaciones y Google Sheets
+
+generator client {
+  provider        = "prisma-client-js"
+  driverAdapters  = true
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Negocio/Tienda que busca personal
+model Negocio {
+  id              String   @id @default(cuid())
+  nombre          String
+  slug            String   @unique
+  email           String   @unique
+  password        String
+  telefono        String?
+  direccion       String?
+  descripcion     String?  // Eslogan/descripción del negocio
+  logoUrl         String?
+  
+  // Configuración de vacantes
+  activo          Boolean  @default(true)
+  buscandoPersonal Boolean @default(true)
+  puestoBuscado   String?  @default("Personal general")
+  requisitos      String?
+  
+  // Redes sociales
+  whatsapp        String?
+  facebook        String?
+  instagram       String?
+  
+  // ===== CONFIGURACIÓN DEL CHATBOT IA =====
+  // Modo de operación del bot
+  modoBot         String   @default("hibrido") // faq, citas, consulta, conversacional, hibrido
+  
+  // Proveedor de IA
+  iaProvider      String   @default("z-ai") // z-ai, openai, anthropic, gemini, deepseek
+  iaApiKey        String?  // API Key del proveedor
+  iaModelo        String?  // Modelo a usar (opcional)
+  iaTemperature   Float    @default(0.7) // Nivel de creatividad (0.0 - 1.0)
+  
+  // Base de conocimientos para el bot
+  faqContenido    String?  // Preguntas frecuentes en texto o JSON
+  
+  // ===== NOTIFICACIONES =====
+  
+  // Telegram
+  notifTelegramActivo    Boolean  @default(false)
+  notifTelegramBotToken  String?
+  notifTelegramChatId    String?
+  
+  // Email (Gmail/SMTP)
+  notifEmailActivo       Boolean  @default(true)
+  notifEmailSmtp         String?  // smtp.gmail.com
+  notifEmailPuerto       Int?     @default(587)
+  notifEmailUsuario      String?  // tu@gmail.com
+  notifEmailPassword     String?  // App password de Gmail
+  notifEmailRemitente    String?  // Nombre a mostrar
+  
+  // WhatsApp (API externa - opcional)
+  notifWhatsappActivo    Boolean  @default(false)
+  notifWhatsappApiUrl    String?  // URL de la API (puede ser Twilio, MessageBird, etc)
+  notifWhatsappApiKey    String?  // API Key
+  notifWhatsappNumero    String?  // Número del negocio
+  
+  // ===== INTEGRACIÓN GOOGLE SHEETS =====
+  googleSheetsActivo     Boolean  @default(false)
+  googleSheetsId         String?  // ID del spreadsheet
+  googleSheetsApiKey     String?  // API Key de Google
+  googleSheetsRange      String?  @default("Candidatos!A:L") // Hoja y rango
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  candidatos      Candidato[]
+  sesiones        Sesion[]
+}
+
+// Aspirante que envía su CV
+model Candidato {
+  id              String   @id @default(cuid())
+  negocioId       String
+  
+  // Datos personales
+  nombre          String
+  email           String
+  telefono        String
+  direccion       String?
+  fechaNacimiento String?
+  fotoUrl         String?
+  
+  // Información profesional
+  puestoSolicitado String?
+  experiencia     String?    // Años de experiencia
+  educacion       String?    // Nivel educativo
+  habilidades     String?    // Lista de habilidades
+  experienciaDetallada String? // Descripción de experiencia
+  disponibilidad  String?    // Tiempo completo, medio tiempo, etc
+  
+  // Documentos
+  cvUrl           String?    // URL del CV subido
+  
+  // Estado
+  estado          String    @default("nuevo") // nuevo, revisado, contactado, contratado, rechazado
+  notas           String?    // Notas del negocio
+  
+  // Sincronización
+  syncGoogleSheets Boolean @default(false) // Si ya fue sincronizado
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  negocio         Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  
+  @@unique([negocioId, email])
+  @@index([negocioId])
+  @@index([estado])
+}
+
+model Sesion {
+  id        String   @id @default(cuid())
+  negocioId String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  negocio   Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  
+  @@index([negocioId])
+}
