@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createClient } from '@libsql/client';
 import ZAI from 'z-ai-web-dev-sdk';
 
@@ -8,6 +9,27 @@ function getDb() {
     url: process.env.TURSO_DATABASE_URL || 'file:/home/z/my-project/db/custom.db',
     authToken: process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN,
   });
+}
+
+// Verificar sesión para obtener negocio
+async function getNegocioFromSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session_token')?.value;
+  
+  if (!token) return null;
+
+  const db = getDb();
+  const result = await db.execute({
+    sql: `SELECT s.negocioId, n.slug FROM Sesion s 
+          JOIN Negocio n ON n.id = s.negocioId
+          WHERE s.token = ? AND s.expiresAt > ?`,
+    args: [token, new Date().toISOString()]
+  });
+
+  return result.rows.length > 0 ? { 
+    negocioId: result.rows[0].negocioId as string,
+    slug: result.rows[0].slug as string 
+  } : null;
 }
 
 // Inicializar ZAI
@@ -199,15 +221,28 @@ async function callDeepSeek(apiKey: string, model: string, messages: Array<{role
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { slug, message, history = [] } = body;
+    let { slug, message, history = [] } = body;
 
     console.log('[CHAT] Recibiendo mensaje:', { slug, message: message?.substring(0, 50) });
 
-    if (!slug || !message) {
+    if (!message) {
       return NextResponse.json(
-        { error: 'Faltan parámetros requeridos' },
+        { error: 'Falta el mensaje' },
         { status: 400 }
       );
+    }
+
+    // Si no hay slug, obtener de la sesión
+    if (!slug) {
+      const session = await getNegocioFromSession();
+      if (!session) {
+        return NextResponse.json(
+          { error: 'No autenticado' },
+          { status: 401 }
+        );
+      }
+      slug = session.slug;
+      console.log('[CHAT] Slug obtenido de sesión:', slug);
     }
 
     const db = getDb();

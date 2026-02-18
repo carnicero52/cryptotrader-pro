@@ -5,17 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { 
-  Briefcase, 
-  Users, 
-  QrCode, 
-  FileText, 
-  CheckCircle, 
+  Bot, 
+  MessageSquare, 
+  BookOpen, 
+  Zap, 
   ArrowRight,
-  Store,
-  UserCheck,
-  BellRing,
+  Telegram,
+  Phone,
+  Settings,
+  CheckCircle,
+  Sparkles,
+  Users,
   Clock
 } from 'lucide-react';
 import Link from 'next/link';
@@ -29,7 +30,6 @@ export default function HomePage() {
     password: '',
     confirmPassword: '',
     telefono: '',
-    puestoBuscado: '',
   });
   const { toast } = useToast();
 
@@ -65,7 +65,6 @@ export default function HomePage() {
           email: formData.email,
           password: formData.password,
           telefono: formData.telefono || undefined,
-          puestoBuscado: formData.puestoBuscado || undefined,
         }),
       });
 
@@ -77,7 +76,7 @@ export default function HomePage() {
 
       toast({
         title: '¡Registro exitoso!',
-        description: 'Tu organización ha sido registrada. Redirigiendo al panel...',
+        description: 'Tu cuenta ha sido creada. Redirigiendo al panel...',
       });
 
       setTimeout(() => {
@@ -86,7 +85,7 @@ export default function HomePage() {
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Error al registrar la organización',
+        description: error.message || 'Error al registrar la cuenta',
         variant: 'destructive',
       });
     } finally {
@@ -95,32 +94,31 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-slate-700 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/admin" className="flex items-center gap-3">
-              <img src="/logo.svg" alt="Logo" className="w-10 h-10" />
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <Briefcase className="w-5 h-5 text-white" />
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                <Bot className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="text-xl font-bold text-slate-800">ContrataFácil</span>
+                <span className="text-xl font-bold text-white">Asistente Pro</span>
               </div>
             </Link>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/admin">
-              <Button variant="outline" size="sm" className="gap-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50">
-                <Store className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="gap-2 border-violet-500 text-violet-400 hover:bg-violet-500/10">
+                <Settings className="w-4 h-4" />
                 <span className="hidden sm:inline">Iniciar Sesión</span>
               </Button>
             </Link>
             <Link href="#registro">
-              <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">Registrar</span>
+              <Button size="sm" className="gap-2 bg-violet-600 hover:bg-violet-700">
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden sm:inline">Crear Cuenta</span>
               </Button>
             </Link>
           </div>
@@ -128,32 +126,32 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="py-16 md:py-24">
+      <section className="py-20 md:py-32">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Users className="w-4 h-4" />
-              Recepción de CVs simplificada
+            <div className="inline-flex items-center gap-2 bg-violet-500/20 text-violet-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Sparkles className="w-4 h-4" />
+              Potenciado con IA
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6">
-              Recibe currículums de forma{' '}
-              <span className="text-emerald-600">fácil y organizada</span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+              Tu asistente virtual{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400">con inteligencia artificial</span>
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 mb-4">
-              <strong>Tu organización tiene un link único.</strong> Los aspirantes entran, llenan sus datos y tú los ves en tu panel.
+            <p className="text-lg md:text-xl text-slate-300 mb-4">
+              <strong>Un chatbot que aprende de tus documentos.</strong> Sube PDFs, configura tu asistente y respóndele a tus clientes 24/7.
             </p>
-            <p className="text-base text-slate-500 mb-8 max-w-2xl mx-auto">
-              Sin papeles, sin emails desordenados. Un solo lugar para recibir y gestionar todos los candidatos a trabajar en tu organización.
+            <p className="text-base text-slate-400 mb-8 max-w-2xl mx-auto">
+              Funciona en tu web, Telegram y WhatsApp. Con base de conocimiento personalizada que aprende de tus leyes, reglamentos y procedimientos.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="#registro">
-                <Button size="lg" className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20">
-                  Registrar mi organización
+                <Button size="lg" className="gap-2 bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-500/20">
+                  Crear mi asistente
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <Link href="#como-funciona">
-                <Button size="lg" variant="outline">
+                <Button size="lg" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800">
                   ¿Cómo funciona?
                 </Button>
               </Link>
@@ -163,46 +161,46 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="py-16 bg-slate-50">
+      <section className="py-16 bg-slate-800/50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">
-            Todo lo que necesitas para contratar
+          <h2 className="text-3xl font-bold text-center text-white mb-12">
+            Todo lo que necesitas para automatizar atención
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            <Card className="border-none shadow-sm bg-white">
+            <Card className="border-none shadow-sm bg-slate-800 border border-slate-700">
               <CardContent className="pt-6">
-                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
-                  <QrCode className="w-6 h-6 text-emerald-600" />
+                <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center mb-4">
+                  <BookOpen className="w-6 h-6 text-violet-400" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-slate-800">Link + QR Único</h3>
-                <p className="text-slate-600 text-sm">Tu organización tiene un link y código QR exclusivo para compartir.</p>
+                <h3 className="font-semibold text-lg mb-2 text-white">Base de Conocimiento</h3>
+                <p className="text-slate-400 text-sm">Sube PDFs y documentos. El asistente aprende y responde basándose en tu información.</p>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-white">
+            <Card className="border-none shadow-sm bg-slate-800 border border-slate-700">
               <CardContent className="pt-6">
-                <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center mb-4">
-                  <FileText className="w-6 h-6 text-teal-600" />
+                <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+                  <Telegram className="w-6 h-6 text-blue-400" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-slate-800">Formulario Simple</h3>
-                <p className="text-slate-600 text-sm">Los aspirantes llenan sus datos y suben su CV en segundos.</p>
+                <h3 className="font-semibold text-lg mb-2 text-white">Telegram</h3>
+                <p className="text-slate-400 text-sm">Conecta un bot de Telegram y responde automáticamente a tus usuarios.</p>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-white">
+            <Card className="border-none shadow-sm bg-slate-800 border border-slate-700">
               <CardContent className="pt-6">
-                <div className="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center mb-4">
-                  <UserCheck className="w-6 h-6 text-cyan-600" />
+                <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-4">
+                  <Phone className="w-6 h-6 text-green-400" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-slate-800">Panel Organizado</h3>
-                <p className="text-slate-600 text-sm">Ve todos los candidatos, filtra por estado y descarga CVs.</p>
+                <h3 className="font-semibold text-lg mb-2 text-white">WhatsApp</h3>
+                <p className="text-slate-400 text-sm">Integra con WhatsApp Business para atender clientes en su app favorita.</p>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-white">
+            <Card className="border-none shadow-sm bg-slate-800 border border-slate-700">
               <CardContent className="pt-6">
-                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-4">
-                  <BellRing className="w-6 h-6 text-amber-600" />
+                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mb-4">
+                  <MessageSquare className="w-6 h-6 text-amber-400" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-slate-800">Notificaciones</h3>
-                <p className="text-slate-600 text-sm">Recibe alertas cuando alguien nuevo aplique a tu vacante.</p>
+                <h3 className="font-semibold text-lg mb-2 text-white">Chat Web</h3>
+                <p className="text-slate-400 text-sm">Widget de chat para tu sitio web con respuestas automáticas.</p>
               </CardContent>
             </Card>
           </div>
@@ -212,78 +210,68 @@ export default function HomePage() {
       {/* How it works */}
       <section id="como-funciona" className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">¿Cómo funciona?</h2>
+          <h2 className="text-3xl font-bold text-center text-white mb-12">¿Cómo funciona?</h2>
           <div className="grid md:grid-cols-4 gap-8 max-w-4xl mx-auto">
             <div className="text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-lg shadow-emerald-500/30">1</div>
-              <h3 className="font-semibold mb-2 text-slate-800">Registra tu organización</h3>
-              <p className="text-sm text-slate-600">Crea tu cuenta en segundos con los datos básicos de tu organización.</p>
+              <div className="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-lg shadow-violet-500/30">1</div>
+              <h3 className="font-semibold mb-2 text-white">Crea tu cuenta</h3>
+              <p className="text-sm text-slate-400">Registra tu negocio en segundos con email y contraseña.</p>
             </div>
             <div className="text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-lg shadow-emerald-500/30">2</div>
-              <h3 className="font-semibold mb-2 text-slate-800">Comparte tu link</h3>
-              <p className="text-sm text-slate-600">Imprime tu QR o comparte el link en tus redes y mostrador.</p>
+              <div className="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-lg shadow-violet-500/30">2</div>
+              <h3 className="font-semibold mb-2 text-white">Sube tus documentos</h3>
+              <p className="text-sm text-slate-400">PDFs, leyes, reglamentos, manuales... El bot aprenderá de ellos.</p>
             </div>
             <div className="text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-lg shadow-emerald-500/30">3</div>
-              <h3 className="font-semibold mb-2 text-slate-800">Recibe candidatos</h3>
-              <p className="text-sm text-slate-600">Los aspirantes entran y llenan el formulario con sus datos.</p>
+              <div className="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-lg shadow-violet-500/30">3</div>
+              <h3 className="font-semibold mb-2 text-white">Conecta canales</h3>
+              <p className="text-sm text-slate-400">Activa Telegram, WhatsApp o el chat web según necesites.</p>
             </div>
             <div className="text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-lg shadow-emerald-500/30">4</div>
-              <h3 className="font-semibold mb-2 text-slate-800">¡Contrata!</h3>
-              <p className="text-sm text-slate-600">Revisa perfiles, descarga CVs y contacta a los mejores candidatos.</p>
+              <div className="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4 shadow-lg shadow-violet-500/30">4</div>
+              <h3 className="font-semibold mb-2 text-white">¡Listo!</h3>
+              <p className="text-sm text-slate-400">Tu asistente responde 24/7 basándose en tu conocimiento.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Flow visualization */}
-      <section className="py-16 bg-slate-50">
+      {/* Use cases */}
+      <section className="py-16 bg-slate-800/50">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <Card className="border-none shadow-lg bg-white">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-slate-800">Flujo del Sistema</CardTitle>
-                <CardDescription>Simple y directo</CardDescription>
+          <h2 className="text-3xl font-bold text-center text-white mb-12">Usos comunes</h2>
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <Card className="border-none shadow-sm bg-slate-800 border border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-violet-400 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Despachos de Abogados
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                    <Store className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800">1. Tú (Organización)</h3>
-                    <p className="text-sm text-slate-600">Registras tu organización y activas "Busco personal". El sistema te da un link y QR.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-teal-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800">2. Aspirantes</h3>
-                    <p className="text-sm text-slate-600">Entran a tu link, ven qué buscas, llenan el formulario y suben su CV.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5 text-cyan-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800">3. Tú revisas</h3>
-                    <p className="text-sm text-slate-600">En tu panel ves todos los candidatos, sus datos, CVs y los organizas por estado.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800">4. ¡Contratas!</h3>
-                    <p className="text-sm text-slate-600">Contactas a los mejores candidatos y los marcas como "contratados" en el sistema.</p>
-                  </div>
-                </div>
+              <CardContent>
+                <p className="text-slate-400 text-sm">Sube leyes y reglamentos. El asistente responde consultas legales basándose en la normativa.</p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm bg-slate-800 border border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-violet-400 flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Soporte Técnico
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-400 text-sm">Sube manuales y FAQs. Los clientes obtienen respuestas automáticas a problemas comunes.</p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm bg-slate-800 border border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-violet-400 flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Atención 24/7
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-400 text-sm">Responde preguntas fuera de horario laboral. Nunca pierdas un cliente por no contestar.</p>
               </CardContent>
             </Card>
           </div>
@@ -294,25 +282,29 @@ export default function HomePage() {
       <section id="registro" className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-lg mx-auto">
-            <Card className="border-none shadow-lg bg-white">
+            <Card className="border-none shadow-lg bg-slate-800 border border-slate-700">
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-slate-800">Registra tu organización</CardTitle>
-                <CardDescription>Comienza a recibir candidatos en menos de 2 minutos</CardDescription>
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-500/20">
+                  <Bot className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl text-white">Crea tu Asistente Pro</CardTitle>
+                <CardDescription className="text-slate-400">Comienza en menos de 2 minutos</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="nombre">Nombre de la organización *</Label>
+                    <Label htmlFor="nombre" className="text-slate-300">Nombre del negocio *</Label>
                     <Input
                       id="nombre"
-                      placeholder="Ej: Café del Centro"
+                      placeholder="Ej: Bufete Rodríguez & Asociados"
                       value={formData.nombre}
                       onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                       required
+                      className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email (para login) *</Label>
+                    <Label htmlFor="email" className="text-slate-300">Email (para login) *</Label>
                     <Input
                       id="email"
                       type="email"
@@ -320,11 +312,12 @@ export default function HomePage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       required
+                      className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="password">Contraseña *</Label>
+                      <Label htmlFor="password" className="text-slate-300">Contraseña *</Label>
                       <Input
                         id="password"
                         type="password"
@@ -332,10 +325,11 @@ export default function HomePage() {
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required
+                        className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirmar *</Label>
+                      <Label htmlFor="confirmPassword" className="text-slate-300">Confirmar *</Label>
                       <Input
                         id="confirmPassword"
                         type="password"
@@ -343,34 +337,35 @@ export default function HomePage() {
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                         required
+                        className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="telefono">Teléfono / WhatsApp</Label>
+                    <Label htmlFor="telefono" className="text-slate-300">Teléfono / WhatsApp</Label>
                     <Input
                       id="telefono"
-                      placeholder="+52 55 1234 5678"
+                      placeholder="+58 412 1234567"
                       value={formData.telefono}
                       onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="puestoBuscado">¿Qué puesto buscas?</Label>
-                    <Input
-                      id="puestoBuscado"
-                      placeholder="Ej: Cajero, Mesero, Vendedor..."
-                      value={formData.puestoBuscado}
-                      onChange={(e) => setFormData({ ...formData, puestoBuscado: e.target.value })}
+                      className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                    className="w-full bg-violet-600 hover:bg-violet-700"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Registrando...' : 'Registrar mi organización'}
+                    {isLoading ? 'Creando cuenta...' : 'Crear mi asistente'}
                   </Button>
+                  <div className="text-center pt-4 border-t border-slate-700">
+                    <p className="text-sm text-slate-400">
+                      ¿Ya tienes una cuenta?{' '}
+                      <Link href="/admin" className="text-violet-400 hover:text-violet-300 font-medium">
+                        Accede aquí
+                      </Link>
+                    </p>
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -379,16 +374,15 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8 mt-auto bg-slate-50">
+      <footer className="border-t border-slate-700 py-8 mt-auto bg-slate-900">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <Briefcase className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+              <Bot className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-slate-800">ContrataFácil</span>
+            <span className="font-semibold text-white">Asistente Pro</span>
           </div>
-          <p className="text-sm text-slate-500">Sistema de recepción de CVs para pequeñas organizaciones.</p>
+          <p className="text-sm text-slate-500">Tu asistente virtual con IA. Aprende de tus documentos y responde 24/7.</p>
         </div>
       </footer>
     </div>
