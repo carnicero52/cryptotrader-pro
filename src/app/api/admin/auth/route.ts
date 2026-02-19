@@ -7,8 +7,8 @@ import { nanoid } from 'nanoid';
 
 function getDb() {
   return createClient({
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.DATABASE_AUTH_TOKEN!,
+    url: process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || 'file:/home/z/my-project/db/custom.db',
+    authToken: process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN,
   });
 }
 

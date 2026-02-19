@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import fs from 'fs/promises';
-import path from 'path';
 import { cookies } from 'next/headers';
 import { createClient } from '@libsql/client';
-import { nanoid } from 'nanoid';
-
-const execAsync = promisify(exec);
+import { PDFParse } from 'pdf-parse';
 
 function getDb() {
   return createClient({
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.DATABASE_AUTH_TOKEN!,
+    url: process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || 'file:/home/z/my-project/db/custom.db',
+    authToken: process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN,
   });
 }
 
@@ -32,37 +26,41 @@ async function verifySession() {
   return result.rows.length > 0 ? result.rows[0].negocioId as string : null;
 }
 
-// Extraer texto de PDF usando Python con pdfplumber
-async function extractTextFromPDF(filePath: string): Promise<string> {
-  const pythonScript = `
-import pdfplumber
-import sys
-
-try:
-    text = ""
-    with pdfplumber.open("${filePath}") as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text() or ""
-            text += page_text + "\\n\\n"
-    print(text)
-except Exception as e:
-    print(f"ERROR: {str(e)}", file=sys.stderr)
-    sys.exit(1)
-`;
-
-  const scriptPath = `/tmp/extract_${nanoid()}.py`;
-  await fs.writeFile(scriptPath, pythonScript);
-
+// Extraer texto de PDF usando pdf-parse (JavaScript puro - funciona en Vercel)
+async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    const { stdout, stderr } = await execAsync(`python3 "${scriptPath}"`);
+    const data = await PDFParse(buffer);
+    return data.text || '';
+  } catch (error) {
+    console.error('Error extracting PDF:', error);
+    throw new Error('No se pudo procesar el PDF');
+  }
+}
+
+// Extraer texto de una URL
+async function extractTextFromURL(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const contentType = response.headers.get('content-type') || '';
     
-    if (stderr && stderr.includes('ERROR')) {
-      throw new Error(stderr);
+    if (contentType.includes('application/pdf')) {
+      const buffer = Buffer.from(await response.arrayBuffer());
+      return extractTextFromPDF(buffer);
+    } else {
+      // Intentar obtener texto de una página web
+      const html = await response.text();
+      // Extraer texto básico del HTML
+      const text = html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return text;
     }
-    
-    return stdout.trim();
-  } finally {
-    await fs.unlink(scriptPath).catch(() => {});
+  } catch (error) {
+    console.error('Error fetching URL:', error);
+    throw new Error('No se pudo obtener el contenido de la URL');
   }
 }
 
@@ -102,7 +100,7 @@ export async function GET() {
   }
 }
 
-// POST - Subir y procesar PDF
+// POST - Subir PDF, texto o URL
 export async function POST(request: NextRequest) {
   try {
     const negocioId = await verifySession();
@@ -110,10 +108,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
-    const formData = await request.formData();
-    const file = formData.get('file') as File | null;
-    const textoManual = formData.get('texto') as string | null;
-
+    const contentType = request.headers.get('content-type') || '';
+    
     const db = getDb();
 
     // Obtener conocimiento actual
@@ -124,25 +120,24 @@ export async function POST(request: NextRequest) {
 
     const current = currentResult.rows[0];
     let conocimientoActual = (current?.conocimientoBase as string) || '';
-    let archivosActuales: Array<{nombre: string, fecha: string, caracteres: number}> = [];
+    let archivosActuales: Array<{nombre: string, fecha: string, caracteres: number, tipo?: string}> = [];
     try {
       archivosActuales = current?.conocimientoArchivos ? JSON.parse(current.conocimientoArchivos as string) : [];
     } catch {
       archivosActuales = [];
     }
 
-    if (file && file.type === 'application/pdf') {
-      // Procesar PDF
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
+    // Si es multipart/form-data (archivo)
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const file = formData.get('file') as File | null;
       
-      // Guardar temporalmente
-      const tempPath = path.join('/tmp', `pdf_${nanoid()}.pdf`);
-      await fs.writeFile(tempPath, buffer);
-
-      try {
-        // Extraer texto
-        const textoExtraido = await extractTextFromPDF(tempPath);
+      if (file && file.type === 'application/pdf') {
+        // Procesar PDF
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        
+        const textoExtraido = await extractTextFromPDF(buffer);
         
         if (!textoExtraido || textoExtraido.length < 50) {
           return NextResponse.json({ 
@@ -158,7 +153,8 @@ export async function POST(request: NextRequest) {
         archivosActuales.push({
           nombre: file.name,
           fecha: new Date().toISOString(),
-          caracteres: textoExtraido.length
+          caracteres: textoExtraido.length,
+          tipo: 'pdf'
         });
 
         // Guardar en BD
@@ -172,29 +168,74 @@ export async function POST(request: NextRequest) {
           message: `PDF procesado: ${textoExtraido.length} caracteres extraídos`,
           archivos: archivosActuales
         });
+      }
+      
+      return NextResponse.json({ 
+        error: 'Se requiere un archivo PDF válido' 
+      }, { status: 400 });
+    }
+    
+    // Si es application/json (texto o URL)
+    const body = await request.json();
+    const { texto, url } = body;
 
-      } finally {
-        await fs.unlink(tempPath).catch(() => {});
+    if (url) {
+      // Procesar URL
+      const textoExtraido = await extractTextFromURL(url);
+      
+      if (!textoExtraido || textoExtraido.length < 50) {
+        return NextResponse.json({ 
+          error: 'No se pudo extraer contenido de la URL' 
+        }, { status: 400 });
       }
 
-    } else if (textoManual) {
-      // Agregar texto manual
-      const nuevoContenido = `\n\n=== TEXTO AGREGADO ===\n${textoManual}`;
+      const nuevoContenido = `\n\n=== CONTENIDO DE URL: ${url} ===\n${textoExtraido}`;
       conocimientoActual += nuevoContenido;
 
+      archivosActuales.push({
+        nombre: url.substring(0, 50),
+        fecha: new Date().toISOString(),
+        caracteres: textoExtraido.length,
+        tipo: 'url'
+      });
+
       await db.execute({
-        sql: `UPDATE Negocio SET conocimientoBase = ? WHERE id = ?`,
-        args: [conocimientoActual, negocioId]
+        sql: `UPDATE Negocio SET conocimientoBase = ?, conocimientoArchivos = ? WHERE id = ?`,
+        args: [conocimientoActual, JSON.stringify(archivosActuales), negocioId]
       });
 
       return NextResponse.json({
         success: true,
-        message: 'Texto agregado correctamente'
+        message: `URL procesada: ${textoExtraido.length} caracteres extraídos`,
+        archivos: archivosActuales
+      });
+
+    } else if (texto) {
+      // Agregar texto manual
+      const nuevoContenido = `\n\n=== TEXTO AGREGADO ===\n${texto}`;
+      conocimientoActual += nuevoContenido;
+
+      archivosActuales.push({
+        nombre: 'Texto manual',
+        fecha: new Date().toISOString(),
+        caracteres: texto.length,
+        tipo: 'texto'
+      });
+
+      await db.execute({
+        sql: `UPDATE Negocio SET conocimientoBase = ?, conocimientoArchivos = ? WHERE id = ?`,
+        args: [conocimientoActual, JSON.stringify(archivosActuales), negocioId]
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Texto agregado correctamente',
+        archivos: archivosActuales
       });
 
     } else {
       return NextResponse.json({ 
-        error: 'Se requiere un archivo PDF o texto para agregar' 
+        error: 'Se requiere un archivo PDF, texto o URL' 
       }, { status: 400 });
     }
 
