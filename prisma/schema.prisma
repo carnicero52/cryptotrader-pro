@@ -1,5 +1,4 @@
-// ContrataFácil - Sistema de Recepción de CVs
-// Schema v1.1 - Con notificaciones y Google Sheets
+// CryptoTrader Pro - Trading App Database Schema
 
 generator client {
   provider        = "prisma-client-js"
@@ -11,127 +10,123 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Negocio/Tienda que busca personal
-model Negocio {
+// API Configuration (encrypted keys)
+model ApiConfig {
   id              String   @id @default(cuid())
-  nombre          String
-  slug            String   @unique
-  email           String   @unique
-  password        String
-  telefono        String?
-  direccion       String?
-  descripcion     String?  // Eslogan/descripción del negocio
-  logoUrl         String?
-  
-  // Configuración de vacantes
-  activo          Boolean  @default(true)
-  buscandoPersonal Boolean @default(true)
-  puestoBuscado   String?  @default("Personal general")
-  requisitos      String?
-  
-  // Redes sociales
-  whatsapp        String?
-  facebook        String?
-  instagram       String?
-  
-  // ===== CONFIGURACIÓN DEL CHATBOT IA =====
-  // Modo de operación del bot
-  modoBot         String   @default("hibrido") // faq, citas, consulta, conversacional, hibrido
-  
-  // Proveedor de IA
-  iaProvider      String   @default("z-ai") // z-ai, openai, anthropic, gemini, deepseek
-  iaApiKey        String?  // API Key del proveedor
-  iaModelo        String?  // Modelo a usar (opcional)
-  iaTemperature   Float    @default(0.7) // Nivel de creatividad (0.0 - 1.0)
-  
-  // Base de conocimientos para el bot
-  faqContenido    String?  // Preguntas frecuentes en texto o JSON
-  conocimientoBase String? // Contenido extraído de PDFs y documentos
-  conocimientoArchivos String? // JSON con lista de archivos subidos {nombre, fecha, tamaño}
-  
-  // ===== NOTIFICACIONES =====
-  
-  // Telegram
-  notifTelegramActivo    Boolean  @default(false)
-  notifTelegramBotToken  String?
-  notifTelegramChatId    String?
-  
-  // Email (Gmail/SMTP)
-  notifEmailActivo       Boolean  @default(true)
-  notifEmailSmtp         String?  // smtp.gmail.com
-  notifEmailPuerto       Int?     @default(587)
-  notifEmailUsuario      String?  // tu@gmail.com
-  notifEmailPassword     String?  // App password de Gmail
-  notifEmailRemitente    String?  // Nombre a mostrar
-  
-  // WhatsApp (API externa - opcional)
-  notifWhatsappActivo    Boolean  @default(false)
-  notifWhatsappApiUrl    String?  // URL de la API (puede ser Twilio, MessageBird, etc)
-  notifWhatsappApiKey    String?  // API Key
-  notifWhatsappNumero    String?  // Número del negocio
-  
-  // ===== INTEGRACIÓN GOOGLE SHEETS =====
-  googleSheetsActivo     Boolean  @default(false)
-  googleSheetsId         String?  // ID del spreadsheet
-  googleSheetsApiKey     String?  // API Key de Google
-  googleSheetsRange      String?  @default("Candidatos!A:L") // Hoja y rango
-  
+  name            String   @unique  // "binance", "binance_testnet"
+  apiKey          String?           // Encrypted
+  apiSecret       String?           // Encrypted
+  isActive        Boolean  @default(false)
+  testnet         Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
-  candidatos      Candidato[]
-  sesiones        Sesion[]
 }
 
-// Aspirante que envía su CV
-model Candidato {
-  id              String   @id @default(cuid())
-  negocioId       String
-  
-  // Datos personales
-  nombre          String
-  email           String
-  telefono        String
-  direccion       String?
-  fechaNacimiento String?
-  fotoUrl         String?
-  
-  // Información profesional
-  puestoSolicitado String?
-  experiencia     String?    // Años de experiencia
-  educacion       String?    // Nivel educativo
-  habilidades     String?    // Lista de habilidades
-  experienciaDetallada String? // Descripción de experiencia
-  disponibilidad  String?    // Tiempo completo, medio tiempo, etc
-  
-  // Documentos
-  cvUrl           String?    // URL del CV subido
-  
-  // Estado
-  estado          String    @default("nuevo") // nuevo, revisado, contactado, contratado, rechazado
-  notas           String?    // Notas del negocio
-  
-  // Sincronización
-  syncGoogleSheets Boolean @default(false) // Si ya fue sincronizado
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  negocio         Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
-  
-  @@unique([negocioId, email])
-  @@index([negocioId])
-  @@index([estado])
+// User Settings
+model UserSettings {
+  id                    String   @id @default(cuid())
+  paperBalance          Float    @default(10000)
+  realBalance           Float    @default(0)
+  preferredCurrency     String   @default("USDT")
+  theme                 String   @default("dark")
+  notificationsEnabled  Boolean  @default(true)
+  alertSoundEnabled     Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
-model Sesion {
+// Open Positions
+model Position {
+  id            String   @id @default(cuid())
+  symbol        String
+  type          String   // "BUY"
+  amount        Float
+  entryPrice    Float
+  currentPrice  Float
+  pnl           Float    @default(0)
+  pnlPercent    Float    @default(0)
+  isPaper       Boolean  @default(true)
+  stopLoss      Float?
+  takeProfit    Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([symbol])
+  @@index([isPaper])
+}
+
+// Transactions History
+model Transaction {
+  id          String   @id @default(cuid())
+  symbol      String
+  type        String   // "BUY" or "SELL"
+  amount      Float
+  price       Float
+  total       Float
+  fee         Float    @default(0)
+  isPaper     Boolean  @default(true)
+  orderId     String?  // Binance order ID for real trades
+  status      String   @default("completed") // pending, completed, failed, cancelled
+  createdAt   DateTime @default(now())
+
+  @@index([symbol])
+  @@index([isPaper])
+  @@index([createdAt])
+}
+
+// Price Alerts
+model PriceAlert {
+  id          String   @id @default(cuid())
+  symbol      String
+  targetPrice Float
+  condition   String   // "above" or "below"
+  message     String?
+  isActive    Boolean  @default(true)
+  triggered   Boolean  @default(false)
+  triggeredAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([symbol])
+  @@index([isActive])
+}
+
+// Pending Orders (Limit, Stop-Loss)
+model PendingOrder {
+  id            String   @id @default(cuid())
+  symbol        String
+  type          String   // "BUY" or "SELL"
+  orderType     String   // "LIMIT", "STOP_LOSS", "TAKE_PROFIT"
+  amount        Float
+  price         Float
+  triggerPrice  Float?
+  isPaper       Boolean  @default(true)
+  status        String   @default("pending") // pending, executed, cancelled
+  executedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([symbol])
+  @@index([status])
+}
+
+// Candlestick Data Cache
+model CandleCache {
+  id          String   @id @default(cuid())
+  symbol      String
+  interval    String   // "1m", "5m", "15m", "1h", "4h", "1d"
+  data        String   // JSON array of candles
+  lastUpdate  DateTime @default(now())
+
+  @@unique([symbol, interval])
+}
+
+// Watchlist
+model Watchlist {
   id        String   @id @default(cuid())
-  negocioId String
-  token     String   @unique
-  expiresAt DateTime
+  symbol    String
+  order     Int      @default(0)
   createdAt DateTime @default(now())
-  
-  negocio   Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
-  
-  @@index([negocioId])
+
+  @@unique([symbol])
 }
