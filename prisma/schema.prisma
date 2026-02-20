@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "sqlite"
-  url       = env("TURSO_DATABASE_URL")
-  directUrl = env("TURSO_DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // API Configuration (encrypted keys)
