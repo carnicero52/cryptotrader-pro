@@ -81,7 +81,27 @@ export async function tursoQuery(sql: string, args: any[] = []) {
   }
   
   const data = await response.json()
-  return data.results?.[0]?.response?.result || data
+  const result = data.results?.[0]?.response?.result
+  
+  // Si hay un error en el resultado
+  if (data.results?.[0]?.type === 'error') {
+    throw new Error(data.results[0].error?.message || 'Unknown Turso error')
+  }
+  
+  // Convertir filas a formato más amigable
+  if (result?.rows && result?.cols) {
+    const cols = result.cols.map((c: any) => c.name)
+    const rows = result.rows.map((row: any[]) => {
+      const obj: Record<string, any> = {}
+      row.forEach((val, i) => {
+        obj[cols[i]] = val?.value
+      })
+      return obj
+    })
+    return { rows, cols, raw: result }
+  }
+  
+  return result || data
 }
 
 // Inicializar tablas
@@ -94,8 +114,8 @@ export async function initTables() {
       apiSecret TEXT,
       isActive INTEGER DEFAULT 0,
       testnet INTEGER DEFAULT 1,
-      createdAt TEXT DEFAULT datetime('now'),
-      updatedAt TEXT DEFAULT datetime('now')
+      createdAt TEXT,
+      updatedAt TEXT
     )
   `)
   
@@ -109,8 +129,8 @@ export async function initTables() {
       isActive INTEGER DEFAULT 1,
       triggered INTEGER DEFAULT 0,
       triggeredAt TEXT,
-      createdAt TEXT DEFAULT datetime('now'),
-      updatedAt TEXT DEFAULT datetime('now')
+      createdAt TEXT,
+      updatedAt TEXT
     )
   `)
 }

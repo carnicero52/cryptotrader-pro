@@ -16,8 +16,6 @@ function encrypt(text: string): string {
 // GET - Get API configuration
 export async function GET() {
   try {
-    await initTables();
-    
     const result = await tursoQuery(`SELECT apiKey, apiSecret, isActive, testnet FROM ApiConfig WHERE name = ?`, ['binance']);
 
     const config = result?.rows?.[0];
@@ -25,8 +23,8 @@ export async function GET() {
     return NextResponse.json({
       hasApiKey: !!config?.apiKey,
       hasApiSecret: !!config?.apiSecret,
-      isActive: config?.isActive === 1,
-      testnet: config?.testnet === 1 ?? true,
+      isActive: config?.isActive === 1 || config?.isActive === '1',
+      testnet: config?.testnet === 1 || config?.testnet === '1' || true,
     });
   } catch (error) {
     console.error('Error getting config:', error);
