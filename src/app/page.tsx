@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -151,6 +152,7 @@ export default function TradingDashboard() {
   const [apiSecret, setApiSecret] = useState('');
   const [testnet, setTestnet] = useState(true);
   const [showSecret, setShowSecret] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
   
   // UI
   const [searchQuery, setSearchQuery] = useState('');
@@ -628,7 +630,7 @@ export default function TradingDashboard() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => document.getElementById('config-section')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => setShowConfigDialog(true)}
                 className="gap-2"
               >
                 <Settings className="w-4 h-4" /> Config API
@@ -660,31 +662,6 @@ export default function TradingDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-4">
-        {/* Panel de Ayuda */}
-        {!hasApiKeys && (
-          <Card className="bg-blue-500/10 border-blue-500/30 mb-4">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">👋</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-blue-400 mb-1">¡Bienvenido a CryptoTrader Pro!</h3>
-                  <p className="text-sm text-gray-300 mb-2">
-                    Estás en modo <strong>Paper Trading</strong> con $10,000 ficticios. Practica sin riesgo.
-                  </p>
-                  <div className="text-xs text-gray-400 space-y-1">
-                    <p>📊 <strong>Precios en tiempo real</strong> - Se actualizan cada segundo vía WebSocket</p>
-                    <p>🧪 <strong>Paper Trading</strong> - Dinero ficticio, sin riesgo real</p>
-                    <p>💰 <strong>Real Trading</strong> - Conecta tu cuenta de Binance con API Keys</p>
-                    <p>⚙️ <strong>Config API</strong> - Haz clic arriba a la derecha para configurar Binance</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <Card className="bg-[#111118] border-gray-800">
@@ -1251,6 +1228,86 @@ export default function TradingDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Diálogo de Configuración API */}
+      <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
+        <DialogContent className="bg-[#111118] border-gray-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5" /> API de Binance
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Configura tus API keys para trading real.{' '}
+              <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                Crear API Key →
+              </a>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            <div className="flex items-center justify-between p-3 bg-[#1a1a24] rounded-lg">
+              <div>
+                <p className="font-medium">Modo Testnet</p>
+                <p className="text-xs text-gray-400">Usar ambiente de pruebas</p>
+              </div>
+              <Switch checked={testnet} onCheckedChange={setTestnet} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>API Key</Label>
+              <Input
+                type="text"
+                placeholder="Tu API Key de Binance"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="bg-[#1a1a24] border-gray-700"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>API Secret</Label>
+              <div className="relative">
+                <Input
+                  type={showSecret ? 'text' : 'password'}
+                  placeholder="Tu API Secret"
+                  value={apiSecret}
+                  onChange={(e) => setApiSecret(e.target.value)}
+                  className="bg-[#1a1a24] border-gray-700 pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0"
+                  onClick={() => setShowSecret(!showSecret)}
+                >
+                  {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <Button onClick={() => { saveApiConfig(); setShowConfigDialog(false); }} className="w-full gap-2 bg-blue-600 hover:bg-blue-700">
+              <Shield className="w-4 h-4" /> Guardar Configuración
+            </Button>
+
+            {hasApiKeys && (
+              <div className="flex items-center gap-2 p-3 bg-green-500/10 text-green-400 rounded-lg">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm">API keys configuradas ✓</span>
+              </div>
+            )}
+
+            <Separator className="bg-gray-800" />
+
+            <div className="space-y-2">
+              <Label className="text-red-400">Zona de Peligro</Label>
+              <Button variant="outline" onClick={() => { resetPaperTrading(); setShowConfigDialog(false); }} className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10">
+                <AlertTriangle className="w-4 h-4 mr-2" /> Reiniciar Paper Trading
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="border-t border-gray-800 bg-[#0f0f15] py-3 mt-6">
