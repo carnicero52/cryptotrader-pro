@@ -731,12 +731,12 @@ export default function TradingDashboard() {
                     </div>
                     <div className="bg-[#1a1a24] rounded p-2 text-center">
                       <p className="text-gray-400 text-xs">SMA 20</p>
-                      <p className="font-bold">${indicators.currentSMA20?.toFixed(2)}</p>
+                      <p className="font-bold">${indicators.currentSMA20?.toFixed(2) ?? '-'}</p>
                     </div>
                     <div className="bg-[#1a1a24] rounded p-2 text-center">
                       <p className="text-gray-400 text-xs">MACD</p>
                       <p className={`font-bold ${indicators.currentMACD?.histogram > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {indicators.currentMACD?.macd.toFixed(2)}
+                        {indicators.currentMACD?.macd?.toFixed(2) ?? '-'}
                       </p>
                     </div>
                     <div className="bg-[#1a1a24] rounded p-2 text-center">
@@ -870,16 +870,16 @@ export default function TradingDashboard() {
                         <div>
                           <p className="font-medium">{crypto.symbol.replace('USDT', '')}</p>
                           <p className="text-xs text-gray-400">
-                            {crypto.quoteVolume > 1000000000 ? `${(crypto.quoteVolume / 1000000000).toFixed(1)}B` : 
-                             crypto.quoteVolume > 1000000 ? `${(crypto.quoteVolume / 1000000).toFixed(1)}M` : 
-                             `${(crypto.quoteVolume / 1000).toFixed(1)}K`}
+                            {(crypto.quoteVolume ?? 0) > 1000000000 ? `${((crypto.quoteVolume ?? 0) / 1000000000).toFixed(1)}B` : 
+                             (crypto.quoteVolume ?? 0) > 1000000 ? `${((crypto.quoteVolume ?? 0) / 1000000).toFixed(1)}M` : 
+                             `${((crypto.quoteVolume ?? 0) / 1000).toFixed(1)}K`}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">${crypto.price < 1 ? crypto.price.toFixed(6) : crypto.price.toLocaleString(undefined, {maximumFractionDigits: 2})}</p>
+                        <p className="font-medium">${crypto.price < 1 ? crypto.price?.toFixed(6) ?? '0' : crypto.price?.toLocaleString(undefined, {maximumFractionDigits: 2}) ?? '0'}</p>
                         <p className={`text-xs ${crypto.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {crypto.change24h >= 0 ? '+' : ''}{crypto.change24h.toFixed(2)}%
+                          {crypto.change24h >= 0 ? '+' : ''}{crypto.change24h?.toFixed(2) ?? '0'}%
                         </p>
                       </div>
                     </div>
@@ -907,12 +907,12 @@ export default function TradingDashboard() {
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{pos.symbol.replace('USDT', '')}</span>
                             <span className={pos.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
-                              {pos.pnl >= 0 ? '+' : ''}{pos.pnlPercent.toFixed(2)}%
+                              {pos.pnl >= 0 ? '+' : ''}{pos.pnlPercent?.toFixed(2) ?? '0'}%
                             </span>
                           </div>
                           <div className="flex items-center justify-between text-xs text-gray-400 mt-1">
-                            <span>{pos.amount} @ ${pos.price.toLocaleString()}</span>
-                            <span>${(pos.amount * pos.currentPrice).toFixed(2)}</span>
+                            <span>{pos.amount} @ ${pos.price?.toLocaleString() ?? '0'}</span>
+                            <span>${((pos.amount ?? 0) * (pos.currentPrice ?? 0)).toFixed(2)}</span>
                           </div>
                         </div>
                       ))}
@@ -934,10 +934,10 @@ export default function TradingDashboard() {
                       <div key={balance.asset} className="p-3 border-b border-gray-800">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">{balance.asset}</span>
-                          <span className="text-gray-400">${balance.usdValue.toFixed(2)}</span>
+                          <span className="text-gray-400">${balance.usdValue?.toFixed(2) ?? '0.00'}</span>
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
-                          {balance.free.toFixed(8)} available
+                          {balance.free?.toFixed(8) ?? '0'} available
                         </div>
                       </div>
                     ))}
@@ -978,8 +978,8 @@ export default function TradingDashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">${tx.total.toFixed(2)}</p>
-                          <p className="text-xs text-gray-400">@ ${tx.price.toLocaleString()}</p>
+                          <p className="font-medium">${tx.total?.toFixed(2) ?? '0.00'}</p>
+                          <p className="text-xs text-gray-400">@ ${tx.price?.toLocaleString() ?? '0'}</p>
                         </div>
                       </div>
                     ))}
