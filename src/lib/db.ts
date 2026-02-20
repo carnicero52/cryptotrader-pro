@@ -46,10 +46,9 @@ export async function tursoQuery(sql: string, args: any[] = []) {
   }
   
   // Convertir URL de libsql a HTTPS
-  // libsql://nombre.turso.io -> https://nombre.turso.io
   const httpUrl = tursoUrl.replace('libsql://', 'https://')
   
-  const response = await fetch(`${httpUrl}`, {
+  const response = await fetch(`${httpUrl}/v2/pipeline`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${tursoToken}`,
