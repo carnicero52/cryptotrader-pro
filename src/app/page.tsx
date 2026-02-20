@@ -624,6 +624,16 @@ export default function TradingDashboard() {
             </div>
             
             <div className="flex items-center gap-4">
+              {/* Botón de Configuración Visible */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => document.getElementById('config-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="gap-2"
+              >
+                <Settings className="w-4 h-4" /> Config API
+              </Button>
+              
               <div className="flex items-center gap-2 bg-[#1a1a24] rounded-lg p-1">
                 <button
                   onClick={() => setIsRealMode(false)}
@@ -634,7 +644,7 @@ export default function TradingDashboard() {
                 <button
                   onClick={() => {
                     if (hasApiKeys) setIsRealMode(true);
-                    else toast({ title: 'Configura tus API keys primero', variant: 'destructive' });
+                    else toast({ title: 'Configura tus API keys primero', description: 'Haz clic en "Config API" para configurar', variant: 'destructive' });
                   }}
                   className={`px-3 py-1.5 rounded-md text-sm transition ${isRealMode ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}
                 >
@@ -650,6 +660,31 @@ export default function TradingDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-4">
+        {/* Panel de Ayuda */}
+        {!hasApiKeys && (
+          <Card className="bg-blue-500/10 border-blue-500/30 mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">👋</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-blue-400 mb-1">¡Bienvenido a CryptoTrader Pro!</h3>
+                  <p className="text-sm text-gray-300 mb-2">
+                    Estás en modo <strong>Paper Trading</strong> con $10,000 ficticios. Practica sin riesgo.
+                  </p>
+                  <div className="text-xs text-gray-400 space-y-1">
+                    <p>📊 <strong>Precios en tiempo real</strong> - Se actualizan cada segundo vía WebSocket</p>
+                    <p>🧪 <strong>Paper Trading</strong> - Dinero ficticio, sin riesgo real</p>
+                    <p>💰 <strong>Real Trading</strong> - Conecta tu cuenta de Binance con API Keys</p>
+                    <p>⚙️ <strong>Config API</strong> - Haz clic arriba a la derecha para configurar Binance</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <Card className="bg-[#111118] border-gray-800">
@@ -976,20 +1011,39 @@ export default function TradingDashboard() {
                     </div>
                   ) : (
                     <ScrollArea className="h-48">
-                      {positions.map((pos) => (
+                      {positions.map((pos) => {
+                        const posPrice = pos.price ?? 0;
+                        const posAmount = pos.amount ?? 0;
+                        const posCurrentPrice = pos.currentPrice ?? 0;
+                        const posPnlPercent = pos.pnlPercent ?? 0;
+                        
+                        return (
                         <div key={pos.id} className="p-3 border-b border-gray-800">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between mb-2">
                             <span className="font-medium">{pos.symbol.replace('USDT', '')}</span>
                             <span className={pos.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
-                              {pos.pnl >= 0 ? '+' : ''}{pos.pnlPercent?.toFixed(2) ?? '0'}%
+                              {pos.pnl >= 0 ? '+' : ''}{posPnlPercent?.toFixed(2) ?? '0'}%
                             </span>
                           </div>
-                          <div className="flex items-center justify-between text-xs text-gray-400 mt-1">
-                            <span>{pos.amount} @ ${pos.price?.toLocaleString() ?? '0'}</span>
-                            <span>${((pos.amount ?? 0) * (pos.currentPrice ?? 0)).toFixed(2)}</span>
+                          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+                            <span>{posAmount} @ ${posPrice?.toLocaleString() ?? '0'}</span>
+                            <span>${(posAmount * posCurrentPrice).toFixed(2)}</span>
                           </div>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            className="w-full bg-red-600 hover:bg-red-700"
+                            onClick={() => {
+                              setSelectedCrypto(pos.symbol);
+                              setTradeAmount(posAmount.toString());
+                              toast({ title: 'Listo para vender', description: `Presiona VENDER para cerrar tu posición de ${pos.symbol.replace('USDT', '')}` });
+                            }}
+                          >
+                            <TrendingDown className="w-4 h-4 mr-1" /> Vender Todo
+                          </Button>
                         </div>
-                      ))}
+                        );
+                      })}
                     </ScrollArea>
                   )}
                 </CardContent>
@@ -1120,11 +1174,16 @@ export default function TradingDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="settings">
+          <TabsContent value="settings" id="config-section">
             <Card className="bg-[#111118] border-gray-800">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2"><Key className="w-5 h-5" /> API de Binance</CardTitle>
-                <CardDescription>Configura tus API keys para trading real</CardDescription>
+                <CardDescription>
+                  Configura tus API keys para trading real. 
+                  <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline ml-1">
+                    Crear API Key →
+                  </a>
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-[#1a1a24] rounded-lg">
