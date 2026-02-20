@@ -13,63 +13,16 @@ Chatbot SaaS para negocios con IA integrada. Cada negocio puede tener su propio 
 - GitHub: https://github.com/carnicero52/asistente-pro
 - Producción: https://asistente-pro-two.vercel.app
 
-### Últimos cambios subidos:
-- Commit: `16c81be` - "fix: Reemplazar Python por JavaScript para PDFs y agregar fallback de BD"
-- Build: ✅ Pasando correctamente
-
 ---
 
-### WHATSAPP BUSINESS API - CREDENCIALES OBTENIDAS:
+### WHATSAPP BUSINESS API - CREDENCIALES:
 
 #### Cuenta de Meta:
-- **Facebook nuevo creado:** ✅
-- **Cuenta de Desarrollador:** ✅ Creada
 - **App Name:** Asistente Pro
 - **App ID:** 1439028070931380
-
-#### WhatsApp Business:
 - **Número de prueba:** +1 555 185 8512
 - **Phone Number ID:** 1042171135639273
-- **Mi número verificado:** +584249388632
-- **Token:** EXPIRADO - Generar nuevo en:
-  - https://developers.facebook.com/apps/1439028070931380/whatsapp-business-api/basic-info/
-
-#### URLs importantes:
-- Apps: https://developers.facebook.com/apps/
-- Mi App: https://developers.facebook.com/apps/1439028070931380/
-- WhatsApp Setup: https://developers.facebook.com/apps/1439028070931380/whatsapp-business-api/basic-info/
-- Business Settings: https://business.facebook.com/settings
-
----
-
-### PENDIENTE PARA CONTINUAR:
-
-1. **Generar nuevo token de acceso** (el anterior expiró)
-2. **Probar enviar mensaje de prueba**
-3. **Configurar webhook** para recibir mensajes
-4. **Integrar WhatsApp con el panel de Asistente Pro**
-
----
-
-### CREDENCIALES DE PRUEBA (para login):
-- Email: demo@bufete.com
-- Password: demo123
-
----
-
-### ARCHIVOS IMPORTANTES MODIFICADOS:
-- `src/app/api/admin/conocimiento/route.ts` - PDF con JavaScript (pdf-parse)
-- `src/app/api/admin/auth/route.ts` - Fallback de BD local
-- `src/app/api/clientes/route.ts` - Fallback de BD
-- `src/app/api/admin/registrar-cliente/route.ts` - Fallback de BD
-
----
-
-### NEGOCIO DEL USUARIO:
-- **Nombre:** Bufete Dr. Yovany Martínez
-- **Giro:** Derecho Laboral
-- **País:** México (usuario en Venezuela)
-- **WhatsApp Business personal:** +584249388632
+- **Token:** EXPIRADO
 
 ---
 
@@ -80,31 +33,44 @@ Chatbot SaaS para negocios con IA integrada. Cada negocio puede tener su propio 
 ### Descripción:
 Aplicación de trading personal conectada a Binance API con Paper Trading y Trading Real.
 
+### Repositorio:
+- **GitHub:** https://github.com/carnicero52/cryptotrader-pro
+- **Producción:** https://my-project-five-beta-61.vercel.app
+
 ### Características implementadas:
-- 🧪 **Paper Trading** - $10,000 USD ficticios para practicar
-- 💰 **Trading Real** - Conexión con API de Binance
-- 📊 **50+ Criptomonedas** - Precios en tiempo real
-- 📈 **Gráficos de velas** - Candlestick charts con indicadores
-- 📉 **Indicadores técnicos** - RSI, MACD, SMA 20/50
-- 🔔 **Alertas de precio** - Notificaciones cuando el precio llega a un nivel
-- 📋 **Historial** - Registro de todas las transacciones
-- ⭐ **Watchlist** - Lista de favoritos
-- ⚙️ **Configuración API** - Guardar API keys de Binance
+- ✅ Paper Trading con $10,000 USD ficticios
+- ✅ Trading Real con Binance API
+- ✅ 50+ criptomonedas con precios en tiempo real
+- ✅ Gráficos de velas (candlestick)
+- ✅ Indicadores técnicos (RSI, MACD, SMA 20/50)
+- ✅ Sistema de alertas de precio
+- ✅ Watchlist personalizada
+- ✅ Historial de transacciones
+- ✅ API keys encriptadas
+- ✅ CoinGecko como fallback
 
 ### APIs creadas:
-- `/api/prices` - Precios de 50+ criptos desde Binance
+- `/api/prices` - Precios de 50+ criptos (Binance + CoinGecko fallback)
 - `/api/candles` - Velas + indicadores técnicos
 - `/api/config` - Guardar API keys (encriptadas)
 - `/api/balance` - Balance real de Binance
 - `/api/orders` - Crear/cancelar órdenes reales
 - `/api/alerts` - Sistema de alertas de precio
 
-### Base de datos:
-- SQLite con Prisma
-- Tablas: ApiConfig, UserSettings, Position, Transaction, PriceAlert, PendingOrder, Watchlist
-
-### Estado: FUNCIONANDO ✅
-
-### Fecha inicio: 19-Feb-2026
+### Estado del despliegue:
+- ✅ Build pasando correctamente
+- ✅ Código subido a GitHub
+- ✅ Variables de entorno configuradas
+- ✅ Desplegado en Vercel
 
 ---
+
+## NOTAS IMPORTANTES
+
+1. **Paper Trading funciona sin base de datos** - Usa localStorage del navegador
+2. **Trading Real requiere API keys de Binance** - Se guardan encriptadas en la BD
+3. **CoinGecko como fallback** - Si Binance está bloqueado, usa CoinGecko
+
+---
+
+Fecha de actualización: 2026-02-20
