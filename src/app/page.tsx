@@ -156,8 +156,26 @@ export default function TradingDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [watchlist, setWatchlist] = useState<string[]>(['BTCUSDT', 'ETHUSDT', 'SOLUSDT']);
   const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
+  
+  // WebSocket connection
+  const wsRef = useRef<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  // Fetch prices
+  // Process WebSocket ticker data
+  const processTickerData = useCallback((ticker: any) => {
+    return {
+      symbol: ticker.s,
+      price: parseFloat(ticker.c),
+      change24h: parseFloat(ticker.P),
+      high24h: parseFloat(ticker.h),
+      low24h: parseFloat(ticker.l),
+      volume: parseFloat(ticker.v),
+      quoteVolume: parseFloat(ticker.q),
+      type: 'crypto' as const,
+    };
+  }, []);
+
+  // Fetch prices (fallback)
   const fetchPrices = useCallback(async () => {
     try {
       const response = await fetch('/api/prices');
@@ -229,13 +247,6 @@ export default function TradingDashboard() {
     }
   }, []);
 
-  // Initial load
-  useEffect(() => {
-    fetchPrices();
-    checkApiConfig();
-    fetchAlerts();
-  }, [fetchPrices, checkApiConfig, fetchAlerts]);
-
   // Update candles when selected crypto or interval changes
   useEffect(() => {
     fetchCandles();
@@ -282,11 +293,71 @@ export default function TradingDashboard() {
     });
   }, [prices, alerts, toast]);
 
-  // Auto-refresh
+  // WebSocket connection for real-time prices
   useEffect(() => {
-    const intervalId = setInterval(fetchPrices, 10000);
-    return () => clearInterval(intervalId);
-  }, [fetchPrices]);
+    // Initial fetch para cargar datos inmediatamente
+    fetchPrices();
+    checkApiConfig();
+    fetchAlerts();
+    
+    // Conectar a Binance WebSocket
+    const connectWebSocket = () => {
+      try {
+        // Stream de todos los tickers en tiempo real
+        const ws = new WebSocket('wss://stream.binance.com:9443/ws/!ticker@arr');
+        wsRef.current = ws;
+        
+        ws.onopen = () => {
+          console.log('✅ WebSocket conectado a Binance');
+          setIsConnected(true);
+          setLoading(false);
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const tickers = JSON.parse(event.data);
+            // Filtrar solo pares USDT y actualizar precios
+            const usdtTickers = tickers
+              .filter((t: any) => t.s.endsWith('USDT'))
+              .map(processTickerData)
+              .filter((t: any) => t.quoteVolume > 0)
+              .sort((a: any, b: any) => b.quoteVolume - a.quoteVolume);
+            
+            if (usdtTickers.length > 0) {
+              setPrices(usdtTickers);
+            }
+          } catch (error) {
+            console.error('Error procesando datos WebSocket:', error);
+          }
+        };
+        
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          setIsConnected(false);
+        };
+        
+        ws.onclose = () => {
+          console.log('WebSocket desconectado, reconectando en 5s...');
+          setIsConnected(false);
+          // Reconectar después de 5 segundos
+          setTimeout(connectWebSocket, 5000);
+        };
+      } catch (error) {
+        console.error('Error conectando WebSocket:', error);
+        // Fallback a polling si WebSocket falla
+        setTimeout(connectWebSocket, 5000);
+      }
+    };
+    
+    connectWebSocket();
+    
+    // Cleanup al desmontar
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [fetchPrices, checkApiConfig, fetchAlerts, processTickerData]);
 
   // Calculate portfolio value
   const portfolioValue = positions.reduce((acc, pos) => acc + (pos.amount * pos.currentPrice), paperBalance);
@@ -545,7 +616,10 @@ export default function TradingDashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold">CryptoTrader Pro</h1>
-                <p className="text-xs text-gray-400">Auto Trading Personal</p>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+                  <p className="text-xs text-gray-400">{isConnected ? 'Tiempo real' : 'Conectando...'}</p>
+                </div>
               </div>
             </div>
             
