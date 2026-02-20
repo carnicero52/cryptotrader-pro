@@ -5,7 +5,6 @@ import { createClient } from '@libsql/client'
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
 let prismaClient: PrismaClient | null = null
-let tursoClient: ReturnType<typeof createClient> | null = null
 
 function createPrismaClient() {
   const tursoUrl = process.env.TURSO_DATABASE_URL
@@ -47,9 +46,10 @@ export async function tursoQuery(sql: string, args: any[] = []) {
   }
   
   // Convertir URL de libsql a HTTPS
+  // libsql://nombre.turso.io -> https://nombre.turso.io
   const httpUrl = tursoUrl.replace('libsql://', 'https://')
   
-  const response = await fetch(`${httpUrl}/v2/pipeline`, {
+  const response = await fetch(`${httpUrl}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${tursoToken}`,
@@ -68,6 +68,9 @@ export async function tursoQuery(sql: string, args: any[] = []) {
               return { type: 'text', value: String(arg) }
             })
           }
+        },
+        {
+          type: 'close'
         }
       ]
     })
@@ -75,7 +78,7 @@ export async function tursoQuery(sql: string, args: any[] = []) {
   
   if (!response.ok) {
     const error = await response.text()
-    throw new Error(`Turso error: ${error}`)
+    throw new Error(`Turso error (${response.status}): ${error}`)
   }
   
   const data = await response.json()
