@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { getTursoClient } from '@/lib/db';
+import { tursoQuery, initTables } from '@/lib/db';
 
 // Encrypt API key for storage
 function encrypt(text: string): string {
@@ -13,37 +13,14 @@ function encrypt(text: string): string {
   return iv.toString('hex') + ':' + encrypted;
 }
 
-// Decrypt API key from storage
-function decrypt(text: string): string {
-  try {
-    const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-secret-key', 'salt', 32);
-    const parts = text.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  } catch {
-    return text; // Return as-is if decryption fails
-  }
-}
-
 // GET - Get API configuration
 export async function GET() {
   try {
-    const turso = getTursoClient();
-    if (!turso) {
-      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
-    }
+    await initTables();
+    
+    const result = await tursoQuery(`SELECT apiKey, apiSecret, isActive, testnet FROM ApiConfig WHERE name = ?`, ['binance']);
 
-    const result = await turso.execute({
-      sql: `SELECT apiKey, apiSecret, isActive, testnet FROM ApiConfig WHERE name = ?`,
-      args: ['binance']
-    });
-
-    const config = result.rows[0];
+    const config = result?.rows?.[0];
 
     return NextResponse.json({
       hasApiKey: !!config?.apiKey,
@@ -76,10 +53,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const turso = getTursoClient();
-    if (!turso) {
-      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
-    }
+    await initTables();
 
     // Encrypt and save
     const encryptedKey = encrypt(apiKey);
@@ -87,16 +61,13 @@ export async function POST(request: NextRequest) {
     const id = crypto.randomUUID();
 
     // Delete existing config first
-    await turso.execute({
-      sql: `DELETE FROM ApiConfig WHERE name = ?`,
-      args: ['binance']
-    });
+    await tursoQuery(`DELETE FROM ApiConfig WHERE name = ?`, ['binance']);
 
     // Insert new config
-    await turso.execute({
-      sql: `INSERT INTO ApiConfig (id, name, apiKey, apiSecret, isActive, testnet) VALUES (?, ?, ?, ?, ?, ?)`,
-      args: [id, 'binance', encryptedKey, encryptedSecret, 1, testnet ? 1 : 0]
-    });
+    await tursoQuery(
+      `INSERT INTO ApiConfig (id, name, apiKey, apiSecret, isActive, testnet) VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, 'binance', encryptedKey, encryptedSecret, 1, testnet ? 1 : 0]
+    );
 
     return NextResponse.json({ 
       success: true, 
@@ -112,16 +83,7 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove API configuration
 export async function DELETE() {
   try {
-    const turso = getTursoClient();
-    if (!turso) {
-      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
-    }
-
-    await turso.execute({
-      sql: `DELETE FROM ApiConfig WHERE name = ?`,
-      args: ['binance']
-    });
-
+    await tursoQuery(`DELETE FROM ApiConfig WHERE name = ?`, ['binance']);
     return NextResponse.json({ success: true, message: 'API credentials removed' });
   } catch (error) {
     console.error('Error deleting config:', error);

@@ -5,17 +5,11 @@ import { createClient } from '@libsql/client'
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
 let prismaClient: PrismaClient | null = null
+let tursoClient: ReturnType<typeof createClient> | null = null
 
 function createPrismaClient() {
-  // En producción con Turso
   const tursoUrl = process.env.TURSO_DATABASE_URL
   const tursoToken = process.env.TURSO_AUTH_TOKEN
-  
-  console.log('Creating Prisma client...', { 
-    hasTursoUrl: !!tursoUrl, 
-    hasTursoToken: !!tursoToken,
-    tursoUrl: tursoUrl?.substring(0, 30) + '...'
-  })
   
   if (tursoUrl && tursoToken) {
     try {
@@ -24,17 +18,12 @@ function createPrismaClient() {
         authToken: tursoToken,
       })
       const adapter = new PrismaLibSql(libsql)
-      const client = new PrismaClient({ adapter })
-      console.log('Prisma client created with Turso adapter')
-      return client
+      return new PrismaClient({ adapter })
     } catch (error) {
       console.error('Error creating Prisma client with Turso:', error)
-      throw error
     }
   }
   
-  // En desarrollo con SQLite local
-  console.log('Using local SQLite')
   return new PrismaClient()
 }
 
@@ -48,16 +37,78 @@ export const db = new Proxy({} as PrismaClient, {
   }
 })
 
-// Exportar cliente directo de Turso para operaciones raw
-export function getTursoClient() {
+// Cliente directo de Turso usando HTTP fetch
+export async function tursoQuery(sql: string, args: any[] = []) {
   const tursoUrl = process.env.TURSO_DATABASE_URL
   const tursoToken = process.env.TURSO_AUTH_TOKEN
   
-  if (tursoUrl && tursoToken) {
-    return createClient({
-      url: tursoUrl,
-      authToken: tursoToken,
-    })
+  if (!tursoUrl || !tursoToken) {
+    throw new Error('Turso credentials not configured')
   }
-  return null
+  
+  // Convertir URL de libsql a HTTPS
+  const httpUrl = tursoUrl.replace('libsql://', 'https://')
+  
+  const response = await fetch(`${httpUrl}/v2/pipeline`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${tursoToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      requests: [
+        {
+          type: 'execute',
+          stmt: {
+            sql: sql,
+            args: args.map(arg => {
+              if (arg === null) return { type: 'null' }
+              if (typeof arg === 'string') return { type: 'text', value: arg }
+              if (typeof arg === 'number') return { type: arg % 1 === 0 ? 'integer' : 'float', value: arg }
+              return { type: 'text', value: String(arg) }
+            })
+          }
+        }
+      ]
+    })
+  })
+  
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Turso error: ${error}`)
+  }
+  
+  const data = await response.json()
+  return data.results?.[0]?.response?.result || data
+}
+
+// Inicializar tablas
+export async function initTables() {
+  await tursoQuery(`
+    CREATE TABLE IF NOT EXISTS ApiConfig (
+      id TEXT PRIMARY KEY,
+      name TEXT UNIQUE,
+      apiKey TEXT,
+      apiSecret TEXT,
+      isActive INTEGER DEFAULT 0,
+      testnet INTEGER DEFAULT 1,
+      createdAt TEXT DEFAULT datetime('now'),
+      updatedAt TEXT DEFAULT datetime('now')
+    )
+  `)
+  
+  await tursoQuery(`
+    CREATE TABLE IF NOT EXISTS PriceAlert (
+      id TEXT PRIMARY KEY,
+      symbol TEXT,
+      targetPrice REAL,
+      condition TEXT,
+      message TEXT,
+      isActive INTEGER DEFAULT 1,
+      triggered INTEGER DEFAULT 0,
+      triggeredAt TEXT,
+      createdAt TEXT DEFAULT datetime('now'),
+      updatedAt TEXT DEFAULT datetime('now')
+    )
+  `)
 }
