@@ -119,3 +119,4 @@ Esta aplicación es para uso personal. El trading de criptomonedas conlleva ries
 ---
 
 Desarrollado con Next.js 16 y shadcn/ui
+
